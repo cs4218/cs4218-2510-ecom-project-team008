@@ -203,7 +203,7 @@ describe('loginController', () => {
     expect(res.send).toHaveBeenCalledWith({ success: false, message: 'Email is not registered' });
   });
 
-  test("should return 200 when request password is same as user's existing passowrd", async () => {
+  test("should return 200 when request password is same as user's existing password", async () => {
     // Arrange
     const req = mockRequest;
     userModel.findOne.mockResolvedValue({ _id: 'mock_id', name: mockName, password: mockPassword, email: mockEmail, phone: mockPhone, address: mockAddress });
