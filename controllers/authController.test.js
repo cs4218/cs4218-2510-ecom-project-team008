@@ -54,7 +54,7 @@ describe('registerController', () => {
   ]
 
   test.each(invalidInputs)(
-    'should return $field is required error when there is no attribute $field in request body',
+    'should return 400 $field is required error when there is no attribute $field in request body',
     async ({ field, value, expectedMessage }) => {
       // Arrange
       const req = { body: { ...mockRequest.body, [field]: value } };
@@ -68,7 +68,7 @@ describe('registerController', () => {
     }
   );
 
-  test('should return registration successs when user with given email is found', async () => {
+  test('should return 200 registration success when user with given email is found', async () => {
     // Arrange
     const req = mockRequest;
     userModel.findOne = jest.fn().mockImplementation(async ({ email }) => mockRequest);
@@ -84,7 +84,7 @@ describe('registerController', () => {
     expect(res.send).toHaveBeenCalledWith({ success: false, message: 'Already Register please login' })
   });
 
-  test("should return registration success when user with given email is not found", async () => {
+  test("should return 201 registration success when user with given email is not found", async () => {
     // Arrange
     const req = mockRequest;
     const mockUserCreated = {
@@ -117,7 +117,7 @@ describe('registerController', () => {
     });
   });
 
-  test('should return registration error when error is thrown while saving user model', async () => {
+  test('should return 500 registration error when error is thrown while saving user model', async () => {
     // Arrange
     const req = mockRequest;
     const expectedError = new Error("Internal server error")
@@ -137,7 +137,7 @@ describe('registerController', () => {
     });
   });
 
-  test('should return registration error when error is thrown while finding existing user', async () => {
+  test('should return 500 registration error when error is thrown while finding existing user', async () => {
     // Arrange
     const req = mockRequest;
     const expectedError = new Error("Internal server error")
@@ -224,7 +224,7 @@ describe('loginController', () => {
     expect(res.send).toHaveBeenCalledWith({ success: false, message: 'Invalid Password' });
   });
 
-  test('should return 200 when password provided matches and all required fiedls provided', async () => {
+  test('should return 200 when password provided matches and all required fields provided', async () => {
     // Arrange
     const req = mockRequest;
     const returnedUser = { _id: 'mock_id', name: mockName, password: mockPassword, email: mockEmail, phone: mockPhone, address: mockAddress, role: 'mock_role' };
@@ -295,7 +295,7 @@ describe('forgotPasswordController', () => {
   ]
 
   test.each(invalidInputs)(
-    'should return $field is required error when there is no attribute $field in request body',
+    'should return 400 $field is required error when there is no attribute $field in request body',
     async ({ field, value, expectedMessage }) => {
       // Arrange
       const req = { body: { ...mockRequest.body, [field]: value } };
@@ -322,7 +322,7 @@ describe('forgotPasswordController', () => {
     expect(res.send).toHaveBeenCalledWith({ success: false, message: 'Wrong Email Or Answer' });
   });
 
-  test('should reset password successfully when user is found', async () => {
+  test('should return 200 and reset password successfully when user is found', async () => {
     // Arrange
     const req = mockRequest;
     const mockUser = { _id: "mock_id" };
@@ -377,7 +377,7 @@ describe('testController', () => {
     jest.clearAllMocks();
   });
 
-  test('should respond with protected routes', async () => {
+  test('should return respond with protected routes', async () => {
     // Arrange
     const req = mockRequest;
 
@@ -385,19 +385,28 @@ describe('testController', () => {
     await testController(req, res);
 
     // Assert
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith('Protected Routes');
   });
 
-  it('should log error if something goes wrong', () => {
+  test('should log error if something goes wrong', () => {
+    // Arrange
+    const errorThrown = new Error("Internal Server Error");
+    res.status = jest.fn((code) => {
+      if (code === 200) {
+        throw errorThrown;
+      }
+      return res;
+    });
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
-    const brokenRes = {
-      send: null, // triggers the exception
-    };
-    const req = {};
-    expect(() => testController(req, brokenRes)).toThrow();
+    // Act
+    testController(req, res);
 
-    expect(consoleSpy).toHaveBeenCalled();
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({ error: errorThrown });
+    expect(consoleSpy).toHaveBeenCalledWith(errorThrown);
 
     consoleSpy.mockRestore();
   });
