@@ -87,9 +87,18 @@ describe('registerController', () => {
   test("should return registration success when user with given email is not found", async () => {
     // Arrange
     const req = mockRequest;
+    const mockUserCreated = {
+      _id: "mock_id",
+      name: mockName,
+      email: mockEmail,
+      phone: mockPhone,
+      address: mockAddress,
+      password: "mockHashedPassword",
+      answer: mockAnswer,
+    };
     userModel.findOne.mockResolvedValue(null);
     hashPassword.mockResolvedValue("mockHashedPassword");
-    userModel.prototype.save = jest.fn().mockResolvedValue({ _id: "mock_id", ...req.body });
+    userModel.prototype.save = jest.fn().mockResolvedValue(mockUserCreated);
 
     // Act
     await registerController(req, res);
@@ -101,40 +110,20 @@ describe('registerController', () => {
     expect(hashPassword).toHaveBeenCalledWith(mockPassword);
     expect(userModel.prototype.save).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: "User Register Successfully",
-        user: expect.any(Object),
-      })
-    );
+    expect(res.send).toHaveBeenCalledWith({
+      success: true,
+      message: "User Register Successfully",
+      user: mockUserCreated,
+    });
   });
 
   test('should return registration error when error is thrown while saving user model', async () => {
     // Arrange
     const req = mockRequest;
+    const expectedError = new Error("Internal server error")
     userModel.findOne.mockResolvedValue(null);
     hashPassword.mockResolvedValue("mockHashedPassword");
-    userModel.prototype.save = jest.fn().mockRejectedValue(new Error("Internal server error"));
-
-    // Act
-    await registerController(req, res);
-
-    // Act and Assert
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.send).toHaveBeenCalledWith({
-      success: false,
-      message: "Error in Registration",
-      error: expect.any(Error),
-    });
-    expect(res.send.mock.calls[0][0].error.message).toBe("Internal server error");
-  });
-
-  test('should return registration error when error is thrown while finding existing user', async () => {
-    // Arrange
-    const req = mockRequest;
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    userModel.findOne.mockRejectedValue(new Error("Internal server error"));
+    userModel.prototype.save = jest.fn().mockRejectedValue(expectedError);
 
     // Act
     await registerController(req, res);
@@ -144,9 +133,27 @@ describe('registerController', () => {
     expect(res.send).toHaveBeenCalledWith({
       success: false,
       message: "Error in Registration",
-      error: expect.any(Error),
+      error: expectedError,
     });
-    expect(res.send.mock.calls[0][0].error.message).toBe("Internal server error");
+  });
+
+  test('should return registration error when error is thrown while finding existing user', async () => {
+    // Arrange
+    const req = mockRequest;
+    const expectedError = new Error("Internal server error")
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    userModel.findOne.mockRejectedValue(expectedError);
+
+    // Act
+    await registerController(req, res);
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({
+      success: false,
+      message: "Error in Registration",
+      error: expectedError,
+    });
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
 
     consoleSpy.mockRestore();
@@ -154,7 +161,7 @@ describe('registerController', () => {
 });
 
 describe('loginController', () => {
-  let req, res;
+  let res;
 
     beforeEach(() => {
       res = {
@@ -220,7 +227,8 @@ describe('loginController', () => {
   test('should return 200 when password provided matches and all required fiedls provided', async () => {
     // Arrange
     const req = mockRequest;
-    userModel.findOne.mockResolvedValue({ _id: 'mock_id', name: mockName, password: mockPassword, email: mockEmail, phone: mockPhone, address: mockAddress, role: 'mock_role' });
+    const returnedUser = { _id: 'mock_id', name: mockName, password: mockPassword, email: mockEmail, phone: mockPhone, address: mockAddress, role: 'mock_role' };
+    userModel.findOne.mockResolvedValue(returnedUser);
     comparePassword.mockResolvedValue(true);
     JWT.sign.mockResolvedValue('signed_token');
 
@@ -228,6 +236,7 @@ describe('loginController', () => {
     await loginController(req, res);
 
     // Assert
+    const { password, ...expectedUserModel } = returnedUser;
     expect(JWT.sign).toHaveBeenCalledWith(
       { _id: 'mock_id' },
       process.env.JWT_SECRET,
@@ -237,7 +246,7 @@ describe('loginController', () => {
     expect(res.send).toHaveBeenCalledWith({
       success: true,
       message: 'login successfully',
-      user: expect.objectContaining({ _id: 'mock_id', name: mockName, email: mockEmail, phone: mockPhone, address: mockAddress, role: 'mock_role' }),
+      user: expectedUserModel, // exclude password
       token: 'signed_token'
     })
   });
@@ -245,8 +254,9 @@ describe('loginController', () => {
   test('should return 500 when exception is thrown while finding existing user', async () => {
     // Arrange
     const req = mockRequest;
+    const errorThrown = new Error("Internal server error");
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    userModel.findOne.mockRejectedValue(new Error("Internal server error"));
+    userModel.findOne.mockRejectedValue(errorThrown);
 
     // Act
     await loginController(req, res);
@@ -256,10 +266,9 @@ describe('loginController', () => {
     expect(res.send).toHaveBeenCalledWith({
       success: false,
       message: "Error in login",
-      error: expect.any(Error),
+      error: errorThrown,
     });
-    expect(res.send.mock.calls[0][0].error.message).toBe("Internal server error");
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(errorThrown);
 
     consoleSpy.mockRestore();
   });
@@ -334,8 +343,8 @@ describe('forgotPasswordController', () => {
   test('should return 500 when an error is thrown', async () => {
     // Arrange
     const req = mockRequest;
-    const error = new Error("Internal Server Error");
-    userModel.findOne.mockRejectedValue(error);
+    const errorThrown = new Error("Internal Server Error");
+    userModel.findOne.mockRejectedValue(errorThrown);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Act
@@ -346,9 +355,9 @@ describe('forgotPasswordController', () => {
     expect(res.send).toHaveBeenCalledWith({
       success: false,
       message: "Something went wrong",
-      error,
+      error: errorThrown,
     });
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(errorThrown);
 
     consoleSpy.mockRestore();
   });
