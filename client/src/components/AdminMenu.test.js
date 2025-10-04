@@ -13,39 +13,59 @@ describe.only('Admin Menu Component', () => {
   };
 
   describe('Navigation links', () => {
-    beforeEach(() => {
-      renderMenu();
-    });
-
     test('renders heading Admin Panel', () => {
+      // Act
+      renderMenu();
+
+      // Assert
       expect(screen.getByText('Admin Panel')).toBeInTheDocument();
     });
 
     test("renders 'Create Category link with correct path", () => {
+      // Act
+      renderMenu();
+
+      // Assert
       const link = screen.getByText('Create Category');
       expect(link).toBeInTheDocument();
       expect(link.getAttribute('href')).toBe('/dashboard/admin/create-category');
     });
 
     test("renders 'Create Product link with correct path", () => {
+      // Act
+      renderMenu();
+
+      // Assert
       const link = screen.getByText('Create Product');
       expect(link).toBeInTheDocument();
       expect(link.getAttribute('href')).toBe('/dashboard/admin/create-product');
     });
 
     test("renders 'Products link with correct path", () => {
+      // Act
+      renderMenu();
+
+      // Assert
       const link = screen.getByText('Products');
       expect(link).toBeInTheDocument();
       expect(link.getAttribute('href')).toBe('/dashboard/admin/products');
     });
 
     test("renders 'Orders link with correct path", () => {
+      // Act
+      renderMenu();
+
+      // Assert
       const link = screen.getByText('Orders');
       expect(link).toBeInTheDocument();
       expect(link.getAttribute('href')).toBe('/dashboard/admin/orders');
     });
 
     test('renders links in the correct order', () => {
+      // Act
+      renderMenu();
+
+      // Assert
       const links = screen.getAllByRole('link');
       const linkTexts = links.map(link => link.textContent);
       expect(linkTexts).toEqual([
