@@ -3,7 +3,7 @@ import Layout from "./../../components/Layout";
 import AdminMenu from "./../../components/AdminMenu";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { Select } from "antd";
+import { Select, Modal } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;
 
@@ -19,6 +19,7 @@ const UpdateProduct = () => {
   const [shipping, setShipping] = useState("");
   const [photo, setPhoto] = useState("");
   const [id, setId] = useState("");
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   //get single product
   const getSingleProduct = async () => {
@@ -30,12 +31,12 @@ const UpdateProduct = () => {
       setId(data.product._id);
       setDescription(data.product.description);
       setPrice(data.product.price);
-      setPrice(data.product.price);
       setQuantity(data.product.quantity);
       setShipping(data.product.shipping);
       setCategory(data.product.category._id);
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong in getting product");
     }
   };
   useEffect(() => {
@@ -51,7 +52,7 @@ const UpdateProduct = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something wwent wrong in getting catgeory");
+      toast.error("Something went wrong in getting category");
     }
   };
 
@@ -59,9 +60,40 @@ const UpdateProduct = () => {
     getAllCategory();
   }, []);
 
-  //create product function
+  // Cleanup photo preview URL to prevent memory leak
+  useEffect(() => {
+    if (photo) {
+      const objectUrl = URL.createObjectURL(photo);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [photo]);
+
+  //update product function
   const handleUpdate = async (e) => {
     e.preventDefault();
+
+    // Validation
+    if (!name || name.trim() === "") {
+      toast.error("Product name is required");
+      return;
+    }
+    if (!description || description.trim() === "") {
+      toast.error("Product description is required");
+      return;
+    }
+    if (!price || parseFloat(price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+    if (quantity === "" || parseInt(quantity) < 0) {
+      toast.error("Quantity cannot be negative");
+      return;
+    }
+    if (!category) {
+      toast.error("Please select a category");
+      return;
+    }
+
     try {
       const productData = new FormData();
       productData.append("name", name);
@@ -70,15 +102,16 @@ const UpdateProduct = () => {
       productData.append("quantity", quantity);
       photo && productData.append("photo", photo);
       productData.append("category", category);
-      const { data } = axios.put(
+      productData.append("shipping", shipping);
+      const { data } = await axios.put(
         `/api/v1/product/update-product/${id}`,
         productData
       );
       if (data?.success) {
-        toast.error(data?.message);
-      } else {
         toast.success("Product Updated Successfully");
         navigate("/dashboard/admin/products");
+      } else {
+        toast.error(data?.message);
       }
     } catch (error) {
       console.log(error);
@@ -89,12 +122,9 @@ const UpdateProduct = () => {
   //delete a product
   const handleDelete = async () => {
     try {
-      let answer = window.prompt("Are You Sure want to delete this product ? ");
-      if (!answer) return;
-      const { data } = await axios.delete(
-        `/api/v1/product/delete-product/${id}`
-      );
-      toast.success("Product DEleted Succfully");
+      await axios.delete(`/api/v1/product/delete-product/${id}`);
+      toast.success("Product Deleted Successfully");
+      setDeleteModalVisible(false);
       navigate("/dashboard/admin/products");
     } catch (error) {
       console.log(error);
@@ -102,7 +132,7 @@ const UpdateProduct = () => {
     }
   };
   return (
-    <Layout title={"Dashboard - Create Product"}>
+    <Layout title={"Dashboard - Update Product"}>
       <div className="container-fluid m-3 p-3">
         <div className="row">
           <div className="col-md-3">
@@ -112,7 +142,7 @@ const UpdateProduct = () => {
             <h1>Update Product</h1>
             <div className="m-1 w-75">
               <Select
-                bordered={false}
+                variant="borderless"
                 placeholder="Select a category"
                 size="large"
                 showSearch
@@ -200,27 +230,30 @@ const UpdateProduct = () => {
               </div>
               <div className="mb-3">
                 <Select
-                  bordered={false}
-                  placeholder="Select Shipping "
+                  variant="borderless"
+                  placeholder="Select Shipping"
                   size="large"
                   showSearch
                   className="form-select mb-3"
-                  onChange={(value) => {
-                    setShipping(value);
-                  }}
-                  value={shipping ? "yes" : "No"}
+                  onChange={(value) => setShipping(value)}
+                  value={shipping}
+                  allowClear
                 >
-                  <Option value="0">No</Option>
-                  <Option value="1">Yes</Option>
+                  <Option value={false}>No</Option>
+                  <Option value={true}>Yes</Option>
                 </Select>
               </div>
+
               <div className="mb-3">
                 <button className="btn btn-primary" onClick={handleUpdate}>
                   UPDATE PRODUCT
                 </button>
               </div>
               <div className="mb-3">
-                <button className="btn btn-danger" onClick={handleDelete}>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => setDeleteModalVisible(true)}
+                >
                   DELETE PRODUCT
                 </button>
               </div>
@@ -228,6 +261,17 @@ const UpdateProduct = () => {
           </div>
         </div>
       </div>
+      <Modal
+        title="Delete Product"
+        open={deleteModalVisible}
+        onOk={handleDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        okText="Delete"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Are you sure you want to delete this product?</p>
+      </Modal>
     </Layout>
   );
 };

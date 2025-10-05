@@ -27,7 +27,7 @@ const CreateProduct = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something wwent wrong in getting catgeory");
+      toast.error("Something went wrong in getting category");
     }
   };
 
@@ -35,9 +35,48 @@ const CreateProduct = () => {
     getAllCategory();
   }, []);
 
+  // Cleanup photo preview URL to prevent memory leak
+  useEffect(() => {
+    if (photo) {
+      const objectUrl = URL.createObjectURL(photo);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [photo]);
+
   //create product function
   const handleCreate = async (e) => {
     e.preventDefault();
+
+    // Validation
+    if (!name || name.trim() === "") {
+      toast.error("Product name is required");
+      return;
+    }
+    if (!description || description.trim() === "") {
+      toast.error("Product description is required");
+      return;
+    }
+    if (!price || parseFloat(price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+    if (quantity === "" || parseInt(quantity) < 0) {
+      toast.error("Quantity cannot be negative");
+      return;
+    }
+    if (!category) {
+      toast.error("Please select a category");
+      return;
+    }
+    if (!photo) {
+      toast.error("Please upload a product photo");
+      return;
+    }
+    if (!shipping) {
+      toast.error("Please select shipping option");
+      return;
+    }
+
     try {
       const productData = new FormData();
       productData.append("name", name);
@@ -46,19 +85,28 @@ const CreateProduct = () => {
       productData.append("quantity", quantity);
       productData.append("photo", photo);
       productData.append("category", category);
-      const { data } = axios.post(
+      productData.append("shipping", shipping);
+      const { data } = await axios.post(
         "/api/v1/product/create-product",
         productData
       );
       if (data?.success) {
-        toast.error(data?.message);
-      } else {
         toast.success("Product Created Successfully");
+        // Reset form fields
+        setName("");
+        setDescription("");
+        setPrice("");
+        setQuantity("");
+        setCategory("");
+        setPhoto("");
+        setShipping("");
         navigate("/dashboard/admin/products");
+      } else {
+        toast.error(data?.message);
       }
     } catch (error) {
       console.log(error);
-      toast.error("something went wrong");
+      toast.error("Something went wrong creating product");
     }
   };
 
@@ -73,7 +121,7 @@ const CreateProduct = () => {
             <h1>Create Product</h1>
             <div className="m-1 w-75">
               <Select
-                bordered={false}
+                variant="borderless"
                 placeholder="Select a category"
                 size="large"
                 showSearch
@@ -151,7 +199,7 @@ const CreateProduct = () => {
               </div>
               <div className="mb-3">
                 <Select
-                  bordered={false}
+                  variant="borderless"
                   placeholder="Select Shipping "
                   size="large"
                   showSearch

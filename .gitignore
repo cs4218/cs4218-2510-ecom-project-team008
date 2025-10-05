@@ -7,3 +7,5 @@ node_modules
 docs
 .env
 .idea/
+coverage
+.scannerwork
