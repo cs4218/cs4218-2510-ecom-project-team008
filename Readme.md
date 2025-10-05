@@ -1,5 +1,24 @@
 # CS4218 Project - Virtual Vault
 
+## Project Contributions
+### Chan Jia Jun (A0259308X)
+
+**Client Files**
+- context/auth.js
+- pages/Auth/Register.js
+- pages/Auth/Login.js
+- components/AdminMenu.js
+- pages/admin/AdminDashboard.js
+
+**Server Files**
+- helpers/authHelper.js
+- middleware/authMiddleware.js
+- controllers/authController.js
+    - registerController
+    - loginController
+    - forgotPasswordController
+    - testController
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.
