@@ -1,4 +1,4 @@
-import categoryModel from '../models/categoryModel.js';
+import categoryModel from './categoryModel.js';
 
 describe('Category Model', () => {
   // Clean up after each test
