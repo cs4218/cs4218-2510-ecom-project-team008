@@ -48,6 +48,7 @@ describe('registerController', () => {
     { field: 'name', value: '', expectedMessage: 'Name is Required' },
     { field: 'email', value: '', expectedMessage: 'Email is Required' },
     { field: 'password', value: '', expectedMessage: 'Password is Required' },
+    { field: 'password', value: 'pass', expectedMessage: 'Password must be at least 6 characters' },
     { field: 'phone', value: '', expectedMessage: 'Phone number is Required' },
     { field: 'address', value: '', expectedMessage: 'Address is Required' },
     { field: 'answer', value: '', expectedMessage: 'Answer is Required' },

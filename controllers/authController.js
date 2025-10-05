@@ -17,6 +17,9 @@ export const registerController = async (req, res) => {
     if (!password) {
       return res.status(400).send({ message: "Password is Required" });
     }
+    if (password && password.length < 6) {
+      return res.status(400).send({ message: "Password must be at least 6 characters" });
+    }
     if (!phone) {
       return res.status(400).send({ message: "Phone number is Required" });
     }
