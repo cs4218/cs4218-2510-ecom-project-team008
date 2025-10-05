@@ -6,7 +6,6 @@ import {
   orderStatusController, getAllUsersController
 } from "./authController.js";
 import { comparePassword, hashPassword } from "../helpers/authHelper.js";
-import {expect} from "@playwright/test";
 import orderModel from "../models/orderModel";
 
 jest.mock("../models/userModel.js");
