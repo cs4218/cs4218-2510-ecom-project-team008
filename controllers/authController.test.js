@@ -48,7 +48,8 @@ describe('registerController', () => {
     { field: 'name', value: '', expectedMessage: 'Name is Required' },
     { field: 'email', value: '', expectedMessage: 'Email is Required' },
     { field: 'password', value: '', expectedMessage: 'Password is Required' },
-    { field: 'password', value: 'pass', expectedMessage: 'Password must be at least 6 characters' },
+    { field: 'password', value: 'abcd', expectedMessage: 'Password must be at least 6 characters' },
+    { field: 'password', value: 'abcde', expectedMessage: 'Password must be at least 6 characters' },
     { field: 'phone', value: '', expectedMessage: 'Phone number is Required' },
     { field: 'address', value: '', expectedMessage: 'Address is Required' },
     { field: 'answer', value: '', expectedMessage: 'Answer is Required' },
@@ -66,6 +67,25 @@ describe('registerController', () => {
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith({ message: expectedMessage });
+    }
+  );
+
+  const validPasswords = [
+    { value: "abcdef" },
+    { value: "abcdefg" },
+  ];
+
+  test.each(validPasswords)(
+    'should register successfully when password length >= 6',
+    async ({ value }) => {
+      const req = { body: { ...mockRequest.body, password: value } };
+
+      await registerController(req, res);
+
+      expect(userModel.findOne).toHaveBeenCalledWith({ email: mockEmail });
+      expect(hashPassword).toHaveBeenCalledWith(value);
+      expect(userModel.prototype.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
     }
   );
 
