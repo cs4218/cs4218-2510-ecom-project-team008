@@ -1,35 +1,28 @@
 /* eslint-disable notice/notice */
 import { test, expect } from '@playwright/test';
 import axios from "axios";
+import { normalUsers } from "../config/populateDb.js";
 
 test.describe.configure({ mode: 'serial' });
 
-const validUserInDb = {
-  name: "Test User",
-  email: "testuser@gmail.com",
-  password: "password123",
-  phone: "91234567",
-  address: "123 Playwright St",
-  DOB: "2000-05-05",
-  answer: "table tennis"
-};
+const validUserInDb = normalUsers[0];
 
 const validUserNotInDb = {
   email: "valid_email_not_in_db@gmail.com",
   password: "valid_password_not_in_db"
 };
 
-test.beforeAll(async () => {
-  const res = await axios.post('http://localhost:6060/api/v1/auth/register', {
-    name: validUserInDb.name,
-    email: validUserInDb.email,
-    password: validUserInDb.password,
-    phone: validUserInDb.phone,
-    address: validUserInDb.address,
-    DOB: validUserInDb.DOB,
-    answer: validUserInDb.answer
-  });
-});
+// test.beforeAll(async () => {
+//   const res = await axios.post('http://localhost:6060/api/v1/auth/register', {
+//     name: validUserInDb.name,
+//     email: validUserInDb.email,
+//     password: validUserInDb.password,
+//     phone: validUserInDb.phone,
+//     address: validUserInDb.address,
+//     DOB: validUserInDb.DOB,
+//     answer: validUserInDb.answer
+//   });
+// });
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./login');
@@ -47,6 +40,7 @@ test.describe('Login Page UI', () => {
 
 test.describe('Login Functionality', () => {
   test('should fill the form and login successfully', async ({ page }) => {
+    console.log(validUserInDb)
     await page.getByPlaceholder('Enter Your Email').fill(validUserInDb.email);
     await page.getByPlaceholder('Enter Your Password').fill(validUserInDb.password);
 
