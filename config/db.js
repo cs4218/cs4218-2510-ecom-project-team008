@@ -11,7 +11,6 @@ const connectDB = async () => {
           mongoServer = await MongoMemoryServer.create();
           const uri = mongoServer.getUri();
           await mongoose.connect(uri);
-          console.log("✅ Connected to in-memory MongoDB (test mode)".bgGreen.white);
           await populate();
           return;
         }

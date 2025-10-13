@@ -48,6 +48,4 @@ export async function populate() {
       role: 0,
     }).save();
   }
-
-  console.log("✅ Database seeded with admin and normal users");
 }
