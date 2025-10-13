@@ -1,6 +1,4 @@
-/* eslint-disable notice/notice */
 import { test, expect } from '@playwright/test';
-import axios from "axios";
 import { normalUsers } from "../config/populateDb.js";
 
 test.describe.configure({ mode: 'serial' });
@@ -11,18 +9,6 @@ const validUserNotInDb = {
   email: "valid_email_not_in_db@gmail.com",
   password: "valid_password_not_in_db"
 };
-
-// test.beforeAll(async () => {
-//   const res = await axios.post('http://localhost:6060/api/v1/auth/register', {
-//     name: validUserInDb.name,
-//     email: validUserInDb.email,
-//     password: validUserInDb.password,
-//     phone: validUserInDb.phone,
-//     address: validUserInDb.address,
-//     DOB: validUserInDb.DOB,
-//     answer: validUserInDb.answer
-//   });
-// });
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./login');
