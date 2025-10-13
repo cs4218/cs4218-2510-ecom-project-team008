@@ -50,5 +50,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(axios)/)"
     ]
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.2.3"
   }
 }
