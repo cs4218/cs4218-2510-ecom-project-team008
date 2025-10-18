@@ -32,7 +32,8 @@ app.get('/', (req,res) => {
     res.send("<h1>Welcome to ecommerce app</h1>");
 });
 
-const PORT = process.env.PORT || 6060;
+// uses any available port when running test because supertest runs multiple test suits in parallel
+const PORT = process.env.NODE_ENV === 'test' ? 0 : process.env.PORT || 6060;
 
 export const server = app.listen(PORT, () => {
     console.log(`Server running on ${process.env.DEV_MODE} mode on ${PORT}`.bgCyan.white);
