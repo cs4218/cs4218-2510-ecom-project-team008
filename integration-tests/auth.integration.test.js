@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
-import {server} from "../server";
+import app from "../app";
 import userModel from "../models/userModel";
 import jwt, {JsonWebTokenError} from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -15,18 +15,15 @@ describe('Integration between Auth Controller with database', () => {
   var userInDb;
   const userInDbUnhashedPassword = "mock_password";
 
-  // Set up in-memory database once for test cases
   beforeAll(async() => {
     mongodbServer = await MongoMemoryServer.create();
     const uri = mongodbServer.getUri();
     await mongoose.connect(uri);
   });
 
-  // Clean up database after all test cases are run
   afterAll(async() => {
     await mongoose.disconnect();
     await mongodbServer.stop();
-    await new Promise(resolve => server.close(resolve));
   });
 
   // Clean up collections before each test case so that every test case starts with an empty database
@@ -62,7 +59,7 @@ describe('Integration between Auth Controller with database', () => {
       };
 
       // Act
-      const res = await request(server)
+      const res = await request(app)
         .post('/api/v1/auth/register')
         .send(newUser).set('Accept', 'application/json');
 
@@ -116,7 +113,7 @@ describe('Integration between Auth Controller with database', () => {
       };
 
       // Act
-      const res = await request(server)
+      const res = await request(app)
         .post('/api/v1/auth/register')
         .send(newUser).set('Accept', 'application/json');
 
@@ -144,7 +141,7 @@ describe('Integration between Auth Controller with database', () => {
         answer: "mock_new_answer"
       }
 
-      const res = await request(server)
+      const res = await request(app)
         .post('/api/v1/auth/register')
         .send(newUser);
 
@@ -156,7 +153,7 @@ describe('Integration between Auth Controller with database', () => {
 
   describe("/login", () => {
     it("Should return 404 when email or password is missing", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/login")
         .send({
           email: userInDb.email,
@@ -168,7 +165,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 404 when email is not registered", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/login")
         .send({
           email: "unknown_email@gmail.com",
@@ -181,7 +178,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 401 when password is invalid", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/login")
         .send({
           email: userInDb.email,
@@ -195,7 +192,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 200 and JWT token when login is successful", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/login")
         .send({ email: userInDb.email, password: userInDbUnhashedPassword })
         .set("Accept", "application/json");
@@ -222,7 +219,7 @@ describe('Integration between Auth Controller with database', () => {
           throw new Error("Mock DB error");
         });
 
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/login")
         .send({ email: "mock_email@gmail.com", password: "mock_password" });
 
@@ -236,7 +233,7 @@ describe('Integration between Auth Controller with database', () => {
 
   describe("/forgot-password", () => {
     it("Should return 400 if email is missing", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({ answer: "mock_answer", newPassword: "new_password" });
 
@@ -245,7 +242,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 400 if answer is missing", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({ email: userInDb.email, newPassword: "new_password" });
 
@@ -254,7 +251,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 400 if newPassword is missing", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({ email: userInDb.email, answer: "mock_answer" });
 
@@ -263,7 +260,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 404 when email or answer is incorrect", async () => {
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({
           email: "wrong_email@gmail.com",
@@ -279,7 +276,7 @@ describe('Integration between Auth Controller with database', () => {
     it("Should return 200 and update password successfully", async () => {
       const newPassword = "new_password";
 
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({
           email: userInDb.email,
@@ -308,7 +305,7 @@ describe('Integration between Auth Controller with database', () => {
           throw new Error("Mock DB error");
         });
 
-      const res = await request(server)
+      const res = await request(app)
         .post("/api/v1/auth/forgot-password")
         .send({
           email: userInDb.email,
@@ -352,7 +349,7 @@ describe('Integration between Auth Controller with database', () => {
     });
 
     it("Should return 401 when no token is provided", async () => {
-      const res = await request(server).get("/api/v1/auth/test");
+      const res = await request(app).get("/api/v1/auth/test");
       expect(res.statusCode).toBe(401);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe("Unauthorized: Invalid or missing token");
@@ -363,7 +360,7 @@ describe('Integration between Auth Controller with database', () => {
         expiresIn: "7d",
       });
 
-      const res = await request(server)
+      const res = await request(app)
         .get("/api/v1/auth/test")
         .set("Authorization", userToken);
 
@@ -377,7 +374,7 @@ describe('Integration between Auth Controller with database', () => {
         expiresIn: "7d",
       });
 
-      const res = await request(server)
+      const res = await request(app)
         .get("/api/v1/auth/test")
         .set("Authorization", adminToken)
         .set("Accept", "application/json");
@@ -397,7 +394,7 @@ describe('Integration between Auth Controller with database', () => {
         expiresIn: "7d",
       });
 
-      const res = await request(server)
+      const res = await request(app)
         .get("/api/v1/auth/test")
         .set("Authorization", adminToken);
 
