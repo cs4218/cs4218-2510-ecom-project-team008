@@ -15,7 +15,6 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // form function
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
