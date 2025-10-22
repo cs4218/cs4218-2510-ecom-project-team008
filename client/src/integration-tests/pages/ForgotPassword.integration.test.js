@@ -10,7 +10,6 @@ import { CartProvider } from "../../context/cart";
 import { SearchProvider } from "../../context/search";
 import ForgotPassword from "../../pages/Auth/ForgotPassword";
 
-// Mock axios & toast
 jest.mock("axios");
 jest.mock("react-hot-toast", () => ({
   __esModule: true,
@@ -20,13 +19,11 @@ jest.mock("react-hot-toast", () => ({
   },
 }));
 
-// Mock Layout since we don’t need to render Header/Footer
 jest.mock("../../components/Layout", () => ({
   __esModule: true,
   default: ({ children }) => <div data-testid="mock-layout">{children}</div>,
 }));
 
-// Providers wrapper
 const Providers = ({ children }) => (
   <AuthProvider>
     <SearchProvider>
@@ -35,7 +32,6 @@ const Providers = ({ children }) => (
   </AuthProvider>
 );
 
-// Router wrapper
 const Routers = ({ children }) => (
   <MemoryRouter initialEntries={["/forgot-password"]}>
     <Routes>
