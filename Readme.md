@@ -12,6 +12,7 @@ https://github.com/cs4218/cs4218-2510-ecom-project-team008/actions/runs/18260581
 - context/auth.js
 - pages/Auth/Register.js
 - pages/Auth/Login.js
+- pages/Auth/ForgotPassword.js
 - components/AdminMenu.js
 - pages/admin/AdminDashboard.js
 
@@ -24,6 +25,18 @@ https://github.com/cs4218/cs4218-2510-ecom-project-team008/actions/runs/18260581
   - loginController
   - forgotPasswordController
   - testController
+
+**Integration files**
+- client/src/integration-tests/pages/Login.integration.test.js
+- client/src/integration-tests/pages/Register.integration.test.js
+- client/src/integration-tests/pages/ForgotPassword.integration.test.js
+- integration-tests/auth.integration.test.js (Register, Login, ForgotPassword, test-admin)
+
+**Playwright test**
+- ui-tests/admin-dashboard.spec.js
+- ui-tests/user-login.spec.js
+- ui-tests/user-register.spec.js
+- ui-tests/user-forgotPassword.spec.js
 
 ### Low Wei Bin (A0272304N)
 
